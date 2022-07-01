@@ -7,7 +7,7 @@ const secretKey = require('../../env');
 
 router.use(verifyToken);
 
-router.post('/wishlist', async (req, res) => {
+router.post('/addWish', async (req, res) => {
     try {
         const decoded = jwt.verify(req.token, secretKey);
         
@@ -19,9 +19,42 @@ router.post('/wishlist', async (req, res) => {
             await pool.query(`INSERT INTO wishlist (user_id, movie_id) VALUES ($1, $2) RETURNING *`,[user_id, movie_id]);
             return res.json({message: 'Movie added to wishlist'});
         } else {
-            await pool.query(`DELETE FROM wishlist WHERE user_id = $1 AND movie_id = $2`,[user_id, movie_id]);
+            return res.json({message: 'Movie already on wishlist'});
+        }
+    }
+    catch (err) {
+        console.log(err);
+    }
+});
+
+router.post('/removeWish', async (req, res) => {
+    try {
+        const decoded = jwt.verify(req.token, secretKey);
+        
+        const user_id = decoded.user.user_id;
+        const movie_id = req.body.movie_id;
+
+        let movieOnWishlist = await pool.query('SELECT * from wishlist WHERE user_id = $1 AND movie_id = $2', [user_id, movie_id]);
+        if (movieOnWishlist.rowCount === 0) {
+            return res.json({message: 'Movie not found'});
+        } else {
+            await pool.query(`DELETE FROM wishlist WHERE user_id = $1 AND movie_id = $2*`,[user_id, movie_id]);
             return res.json({message: 'Movie removed from wishlist'});
         }
+    }
+    catch (err) {
+        console.log(err);
+    }
+});
+
+router.get('/returnWishlist', async (req, res) => {
+    try {
+        const decoded = jwt.verify(req.token, secretKey);
+        
+        const user_id = decoded.user.user_id;
+
+        let wishlist = await pool.query('SELECT movie_id from wishlist WHERE user_id = $1', [user_id]);
+        res.json(wishlist.rows);
     }
     catch (err) {
         console.log(err);
