@@ -17,9 +17,9 @@ router.post('/addWish', async (req, res) => {
         let movieOnWishlist = await pool.query('SELECT * from wishlist WHERE user_id = $1 AND movie_id = $2', [user_id, movie_id]);
         if (movieOnWishlist.rowCount === 0) {
             await pool.query(`INSERT INTO wishlist (user_id, movie_id) VALUES ($1, $2) RETURNING *`,[user_id, movie_id]);
-            return res.json({message: 'Movie added to wishlist'});
+            return res.status(200).json({message: 'Movie added to wishlist'});
         } else {
-            return res.json({message: 'Movie already on wishlist'});
+            return res.status(400).json({message: 'Movie already on wishlist'});
         }
     }
     catch (err) {
@@ -36,10 +36,10 @@ router.post('/removeWish', async (req, res) => {
 
         let movieOnWishlist = await pool.query('SELECT * from wishlist WHERE user_id = $1 AND movie_id = $2', [user_id, movie_id]);
         if (movieOnWishlist.rowCount === 0) {
-            return res.json({message: 'Movie not found'});
+            return res.status(400).json({message: 'Movie not found'});
         } else {
-            await pool.query(`DELETE FROM wishlist WHERE user_id = $1 AND movie_id = $2*`,[user_id, movie_id]);
-            return res.json({message: 'Movie removed from wishlist'});
+            await pool.query('DELETE FROM wishlist WHERE user_id = $1 AND movie_id = $2',[user_id, movie_id]);
+            return res.status(200).json({message: 'Movie removed from wishlist'});
         }
     }
     catch (err) {

@@ -17,8 +17,10 @@ router.post('/register', async (req, res) => {
             return res.status(400).json({message: 'Username and password cannot be empty'});
         }
 
-        const userExists = await pool.query(`SELECT * FROM users WHERE username = $1`,[username]);
-        if (userExists.rowCount > 0 ) {
+        //TODO check if it actually works
+
+        const userExists = await pool.query(`SELECT COUNT (*) FROM users WHERE username = $1`,[username]);
+        if (userExists) {
             return res.status(400).json({message: "Username already taken"});
         }
         
@@ -48,9 +50,9 @@ router.post('/login', async (req, res) => {
         return res.status(400).json({message: 'Username and password cannot be empty'})
     }
 
-    const user = await pool.query(`SELECT * FROM users WHERE username = $1 AND password = $2`,[username, password]);
+    const user = await pool.query(`SELECT * FROM users WHERE username = $1`,[username]);
 
-    if (user.rowCount === 0) {
+    if (user.rowCount === 0 || user.password !== password) {
         return res.status(400).json({message: 'Invalid username/password'});
     }
 
